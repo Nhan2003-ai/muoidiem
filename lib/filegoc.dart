@@ -81,8 +81,12 @@ class _NoteListPageState extends State<NoteListPage> {
   Future<void> fetchNotes([String? folder]) async {
     final data = await database.query(
       'notes',
-      where: folder != null ? 'folder = ? AND (title LIKE ? OR content LIKE ?)' : '(title LIKE ? OR content LIKE ?)',
-      whereArgs: folder != null ? [folder, '%$searchQuery%', '%$searchQuery%'] : ['%$searchQuery%', '%$searchQuery%'],
+      where: folder != null
+          ? 'folder = ? AND (title LIKE ? OR content LIKE ?)'
+          : '(title LIKE ? OR content LIKE ?)',
+      whereArgs: folder != null
+          ? [folder, '%$searchQuery%', '%$searchQuery%']
+          : ['%$searchQuery%', '%$searchQuery%'],
     );
     setState(() {
       notes = data;
@@ -108,6 +112,20 @@ class _NoteListPageState extends State<NoteListPage> {
     fetchNotes();
   }
 
+  Future<void> updateFolder(int folderId, String newName) async {
+    try {
+      await database.update(
+        'folders',
+        {'name': newName},
+        where: 'id = ?',
+        whereArgs: [folderId],
+      );
+      fetchFolders(); // Re-fetch folders after updating
+    } catch (e) {
+      // Handle any potential errors
+      print("Error updating folder: $e");
+    }
+  }
   Future<void> updateNote(int id, String title, String content) async {
     final currentTime = _formatDateTime(DateTime.now());
     await database.update(
@@ -120,7 +138,7 @@ class _NoteListPageState extends State<NoteListPage> {
       where: 'id = ?',
       whereArgs: [id],
     );
-    fetchNotes();  // Re-fetch notes after updating
+    fetchNotes(); // Cập nhật danh sách ghi chú sau khi chỉnh sửa
   }
 
 
@@ -166,7 +184,8 @@ class _NoteListPageState extends State<NoteListPage> {
       context: this.context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(existingNote != null ? 'Chỉnh sửa ghi chú' : 'Thêm ghi chú'),
+          title: Text(
+              existingNote != null ? 'Chỉnh sửa ghi chú' : 'Thêm ghi chú'),
           content: SingleChildScrollView( // Thêm SingleChildScrollView để cuộn khi cần
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -174,10 +193,11 @@ class _NoteListPageState extends State<NoteListPage> {
                 DropdownButtonFormField<String>(
                   value: folder,
                   items: folders
-                      .map((folder) => DropdownMenuItem(
-                    value: folder,
-                    child: Text(folder),
-                  ))
+                      .map((folder) =>
+                      DropdownMenuItem(
+                        value: folder,
+                        child: Text(folder),
+                      ))
                       .toList(),
                   onChanged: (value) {
                     setState(() {
@@ -193,7 +213,8 @@ class _NoteListPageState extends State<NoteListPage> {
                 ),
                 SizedBox(height: 10),
                 TextField(
-                  controller: TextEditingController(text: title), // Cách này đúng
+                  controller: TextEditingController(text: title),
+                  // Cách này đúng
                   decoration: InputDecoration(
                     labelText: 'Tiêu đề',
                     border: OutlineInputBorder(),
@@ -211,7 +232,8 @@ class _NoteListPageState extends State<NoteListPage> {
                     filled: true,
                     fillColor: Colors.grey[200],
                   ),
-                  maxLines: 6,  // Thêm nhiều dòng (hoặc thay đổi số dòng theo nhu cầu)
+                  maxLines: 6,
+                  // Thêm nhiều dòng (hoặc thay đổi số dòng theo nhu cầu)
                   onChanged: (value) => content = value,
                 ),
               ],
@@ -379,7 +401,8 @@ class _NoteListPageState extends State<NoteListPage> {
                       IconButton(
                         icon: Icon(Icons.edit, color: Colors.blue),
                         onPressed: () {
-                          TextEditingController folderController = TextEditingController(text: folder);
+                          TextEditingController folderController = TextEditingController(
+                              text: folder);
                           showDialog(
                             context: context,
                             builder: (BuildContext context) {
@@ -397,10 +420,12 @@ class _NoteListPageState extends State<NoteListPage> {
                                     onPressed: () => Navigator.pop(context),
                                     child: Text('Hủy'),
                                   ),
+
                                   ElevatedButton(
                                     onPressed: () {
                                       if (folderController.text.isNotEmpty) {
-                                        updateFolder(index + 1, folderController.text);
+                                        updateFolder(
+                                            index + 1, folderController.text);
                                         Navigator.pop(context);
                                       }
                                     },
@@ -436,7 +461,4 @@ class _NoteListPageState extends State<NoteListPage> {
       ),
     );
   }
-
-  void updateFolder(int i, String text) {}
-
 }
